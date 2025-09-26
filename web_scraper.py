@@ -18,15 +18,27 @@ def get_plant_links(soup, base_url):
     target_plants = [
         "anthurium",
         "aloe",
+        "alocasia",
         "begonia",
         "bird of paradise",
         "calathea",
         "chinese evergreen",
         "ctenanthe",
         "dracaena",
+        "dieffenbachia",
+        "ficus",
         "ivy",
         "money tree",
         "monstera",
+        "peace lily",
+        "pointsettia",
+        "hypoestes",
+        "pothos",
+        "schefflera",
+        "snake plant",
+        "maranta",
+        "yucca",
+        "zamioculcas zamiifolia 'zz'",
     ]
 
     # Look for clickable plant names (links)
