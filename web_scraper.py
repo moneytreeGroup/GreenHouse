@@ -31,7 +31,7 @@ def get_plant_links(soup, base_url):
         "money tree",
         "monstera",
         "peace lily",
-        "pointsettia",
+        "poinsettia",
         "hypoestes",
         "pothos",
         "schefflera",

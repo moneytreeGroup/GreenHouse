@@ -204,6 +204,18 @@
     "url": "https://www.houseplantresource.com/Peace-Lily-1923594eeec38134a6c8c0b8e3335435?pvs=25"
   },
   {
+    "name": "Poinsettia",
+    "care": {
+      "light_requirements": "Poinsettias prefer bright, indirect light. They can tolerate some direct sunlight, especially during winter months, but prolonged exposure to intense sunlight may cause leaf burn.",
+      "watering_needs": "Keep the soil evenly moist but not waterlogged. Water when the top inch of soil feels dry to the touch. Avoid letting the plant sit in standing water to prevent root rot.",
+      "soil_preferences": "Use a well-draining potting mix rich in organic matter. A mixture of peat moss, perlite, and composted bark provides good drainage while retaining essential nutrients.",
+      "temperature_humidity": "Poinsettias thrive in temperatures between 60°F to 70°F (15°C to 21°C). They prefer moderate humidity levels and benefit from occasional misting, especially in dry indoor environments.",
+      "fertilization": "Feed Poinsettias with a balanced, water-soluble fertilizer every 2-4 weeks during the growing season (spring and summer). Reduce feeding in the fall and winter when the plant's growth slows down.",
+      "pruning_maintenance": "Remove any yellowed or damaged leaves promptly to maintain plant health. Pinch back leggy growth to encourage bushiness. Repot Poinsettias as needed to refresh the soil and provide adequate space for root development."
+    },
+    "url": "https://www.houseplantresource.com/Poinsettia-1923594eeec3818d82a4ca8d54ce64d3?pvs=25"
+  },
+  {
     "name": "Pothos",
     "care": {
       "light_requirements": "Pothos plants prefer bright, indirect light but can tolerate low light conditions. Direct sunlight can scorch their leaves, while too little light can slow their growth and reduce variegation.",
@@ -255,7 +267,7 @@
     "name": "Zamioculcas Zamiifolia 'ZZ'",
     "care": {
       "light_requirements": "ZZ Plants prefer bright, indirect light but can tolerate low light conditions. They do well in offices and rooms with minimal natural light, making them versatile houseplants.",
-      "watering_needs": "Allow the soil to dry out completely between waterings. Water thoroughly when the top inch of soil is dry to the touch. Overwatering can lead to root rot, so it's better to err on the side of underwatering.",
+      "watering_needs": "Allow the soil to dry out completely between waterings. Water thoroughly when the top inch of soil is dry to the touch. Overwatering can lead to root rot, so it’s better to err on the side of underwatering.",
       "soil_preferences": "Use a well-draining potting mix, such as a cactus or succulent mix, to prevent water from sitting in the soil. Adding perlite or sand to regular potting soil can improve drainage.",
       "temperature_humidity": "ZZ Plants thrive in average household temperatures between 60°F and 75°F (15°C to 24°C). They can tolerate low humidity but appreciate occasional misting, especially in dry environments.",
       "fertilization": "Feed ZZ Plants with a balanced, water-soluble fertilizer diluted to half strength every 2-3 months during the growing season (spring and summer). Avoid fertilizing in the fall and winter when the plant's growth slows down.",
