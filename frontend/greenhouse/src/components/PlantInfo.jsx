@@ -1,5 +1,5 @@
 const PlantInfo = ({ plantData, onReset }) => {
-  const { name, care, url } = plantData
+  const { name, care, url, confidence } = plantData
 
   const careItems = [
     { icon: '☀️', title: 'Light Requirements', content: care.light_requirements },
@@ -15,7 +15,10 @@ const PlantInfo = ({ plantData, onReset }) => {
       <div className="plant-header">
         <h2>🌿 {name}</h2>
         <div className="header-actions">
-          <span className="ai-badge">🤖 AI Identified</span>
+          <span className="ai-badge">
+            🤖 AI Identified
+            {confidence && ` (${(confidence * 100).toFixed(1)}% confidence)`}
+          </span>
           <button onClick={onReset} className="new-search-btn">
             Upload New Photo
           </button>

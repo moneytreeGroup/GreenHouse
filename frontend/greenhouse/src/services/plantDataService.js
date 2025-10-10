@@ -1,7 +1,33 @@
-// Import your plant care data
+// Import your plant care data - keeping as fallback
 import plantCareData from '../data/plant_care_data.json'
 
-export const getPlantCareData = (plantName) => {
+const API_BASE_URL = 'http://localhost:8000'
+
+export const getPlantCareData = async (plantName) => {
+  if (!plantName) return null
+  
+  try {
+    // Try to get data from Flask backend first
+    const response = await fetch(`${API_BASE_URL}/api/plants/care/${encodeURIComponent(plantName)}`)
+    
+    if (response.ok) {
+      const result = await response.json()
+      if (result.success && result.plant) {
+        return result.plant
+      }
+    }
+    
+    // Fallback to local data if backend fails
+    return getLocalPlantCareData(plantName)
+    
+  } catch (error) {
+    console.error('Error fetching from backend, using local data:', error)
+    return getLocalPlantCareData(plantName)
+  }
+}
+
+// Fallback function using local data
+const getLocalPlantCareData = (plantName) => {
   if (!plantName) return null
   
   // Normalize plant name for matching
@@ -19,30 +45,7 @@ export const getPlantCareData = (plantName) => {
       normalizedName.includes(p.name.toLowerCase())
     )
   }
-  
-  // Handle common name variations from CNN model
-  const nameMapping = {
-    'zz plant': 'Zamioculcas Zamiifolia \'ZZ\'',
-    'zz': 'Zamioculcas Zamiifolia \'ZZ\'',
-    'zamioculcas': 'Zamioculcas Zamiifolia \'ZZ\'',
-    'chinese evergreen': 'Chinese Evergreen',
-    'aglaonema': 'Chinese Evergreen',
-    'bird of paradise': 'Bird of Paradise',
-    'strelitzia': 'Bird of Paradise',
-    'prayer plant': 'Maranta',
-    'polka dot plant': 'Hypoestes',
-    'devil\'s ivy': 'Pothos',
-    'golden pothos': 'Pothos',
-    'sansevieria': 'Snake Plant',
-    'mother in law tongue': 'Snake Plant'
-  }
-  
-  if (!plant && nameMapping[normalizedName]) {
-    plant = plantCareData.find(p => 
-      p.name === nameMapping[normalizedName]
-    )
-  }
-  
+
   return plant
 }
 

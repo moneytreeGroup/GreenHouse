@@ -1,35 +1,52 @@
-// CNN Model Integration Service
+// Flask Backend Integration Service
+const API_BASE_URL = 'http://localhost:8000'
+
 export const identifyPlantWithCNN = async (imageFile) => {
   try {
-    // Prepare image for CNN model
+    // Prepare image for Flask backend
     const formData = new FormData()
     formData.append('image', imageFile)
     
-    // TODO: Replace with your actual CNN model endpoint when ready
-    const response = await fetch('/api/identify-plant', {
+    // Connect to Flask backend endpoint
+    const response = await fetch(`${API_BASE_URL}/api/plants/identify-and-care`, {
       method: 'POST',
       body: formData,
     })
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     
     const result = await response.json()
-    return result.plant_name || result.prediction || 'Unknown Plant'
+    
+    // Return the full plant data structure that PlantInfo expects
+    if (result.success && result.care_data) {
+      return {
+        name: result.care_data.name,
+        care: result.care_data.care || {},
+        url: result.care_data.url,
+        confidence: result.identification?.top_match?.confidence,
+        predictions: result.identification?.predictions
+      }
+    }
+    
+    throw new Error('No plant data returned from backend')
     
   } catch (error) {
-    console.error('CNN model error:', error)
+    console.error('Backend identification error:', error)
     
-    // Fallback to mock identification while CNN model is training
+    // Fallback to mock identification while debugging
     return mockPlantIdentification(imageFile)
   }
 }
 
 // Mock function for development (remove when CNN model is ready)
 const mockPlantIdentification = async (imageFile) => {
+  // Import care data service for mock
+  const { getPlantCareData } = await import('./plantDataService.js')
+  
   // Simulate processing time
-  await new Promise(resolve => setTimeout(resolve, 3000))
+  await new Promise(resolve => setTimeout(resolve, 2000))
   
   // Mock predictions based on your plant care data
   const availablePlants = [
@@ -42,7 +59,39 @@ const mockPlantIdentification = async (imageFile) => {
   
   // Return random plant for demo (90% success rate)
   if (Math.random() < 0.9) {
-    return availablePlants[Math.floor(Math.random() * availablePlants.length)]
+    const selectedPlant = availablePlants[Math.floor(Math.random() * availablePlants.length)]
+    const careData = await getPlantCareData(selectedPlant)
+    
+    if (careData) {
+      return {
+        name: careData.name,
+        care: careData.care || {},
+        url: careData.url,
+        confidence: Math.random() * 0.3 + 0.7, // Mock confidence 70-100%
+        predictions: [
+          {
+            name: selectedPlant,
+            confidence: Math.random() * 0.3 + 0.7,
+            mock: true
+          }
+        ]
+      }
+    } else {
+      // If no care data found, return basic structure
+      return {
+        name: selectedPlant,
+        care: {},
+        url: null,
+        confidence: Math.random() * 0.3 + 0.7,
+        predictions: [
+          {
+            name: selectedPlant,
+            confidence: Math.random() * 0.3 + 0.7,
+            mock: true
+          }
+        ]
+      }
+    }
   } else {
     throw new Error('Model confidence too low')
   }

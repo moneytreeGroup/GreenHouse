@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react'
 import { identifyPlantWithCNN } from '../services/plantIdentification'
-import { getPlantCareData } from '../services/plantDataService'
 
 const ImageUpload = ({ onPlantIdentified, onError, onLoadingChange }) => {
   const [dragActive, setDragActive] = useState(false)
@@ -31,16 +30,13 @@ const ImageUpload = ({ onPlantIdentified, onError, onLoadingChange }) => {
     try {
       onLoadingChange(true)
       
-      // Use your CNN model for plant identification
-      const plantName = await identifyPlantWithCNN(file)
+      // Use your CNN model for plant identification and care data
+      const plantData = await identifyPlantWithCNN(file)
       
-      // Get care data from your JSON
-      const careData = getPlantCareData(plantName)
-      
-      if (careData) {
-        onPlantIdentified(careData)
+      if (plantData && plantData.name) {
+        onPlantIdentified(plantData)
       } else {
-        onError(`Plant identified as "${plantName}" but no care data available yet.`)
+        onError('Could not identify the plant. Please try again with a clearer image.')
       }
     } catch (error) {
       console.error('Plant identification error:', error)
