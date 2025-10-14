@@ -3,11 +3,17 @@ from services.plant_care_service import PlantCareService
 from services.image_processor import ImageProcessor
 from models.plant_model import PlantModel
 import logging
+import os
 
 plant_bp = Blueprint("plants", __name__)
 plant_care_service = PlantCareService()
 image_processor = ImageProcessor()
-plant_model = PlantModel()
+
+# Load your trained model
+model_path = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "plant_cnn_complete_model.pth"
+)
+plant_model = PlantModel(model_path=model_path)
 
 
 @plant_bp.route("/identify", methods=["POST"])
@@ -170,3 +176,16 @@ def identify_and_get_care():
     except Exception as e:
         logging.error(f"Error in identify and care: {str(e)}")
         return jsonify({"error": "Failed to process request"}), 500
+
+
+@plant_bp.route("/model/info", methods=["GET"])
+def get_model_info():
+    """
+    Get information about the loaded model (for debugging)
+    """
+    try:
+        model_info = plant_model.get_model_info()
+        return jsonify({"success": True, "model_info": model_info}), 200
+    except Exception as e:
+        logging.error(f"Error getting model info: {str(e)}")
+        return jsonify({"error": "Failed to get model info"}), 500
