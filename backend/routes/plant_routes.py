@@ -43,8 +43,9 @@ def identify_plant():
     """
     Identify a plant from an uploaded image
     Expected: multipart/form-data with 'image' file
-    Returns: plant identification results with confidence scores
+    Returns: care data for the best match
     """
+    print("Received identify request")
     try:
         # Check if image file is present
         if "image" not in request.files:
@@ -67,18 +68,29 @@ def identify_plant():
 
         # Process the image
         processed_image = image_processor.preprocess_image(file)
-
         # Get prediction from model
         predictions = plant_model.predict(processed_image)
+        if not predictions:
+            return jsonify({"error": "Could not identify the plant"}), 404
+        print("Predictions:", predictions)
+        # Find the top match (highest confidence)
+        top_prediction = max(predictions, key=lambda x: x["confidence"])
+        plant_name = top_prediction["name"]
 
-        # Format response
-        response = {
-            "success": True,
-            "predictions": predictions,
-            "message": f"Found {len(predictions)} possible matches",
-        }
+        # Get care data for the best match
+        care_data = plant_care_service.get_care_data(plant_name)
 
-        return jsonify(response), 200
+        if not care_data:
+            return (
+                jsonify({"error": f"Care data not found for plant: {plant_name}"}),
+                404,
+            )
+
+        # Add confidence score to care data
+        care_data_with_confidence = dict(care_data)
+        care_data_with_confidence["confidence"] = top_prediction["confidence"]
+
+        return jsonify({"success": True, "plant": care_data_with_confidence}), 200
 
     except Exception as e:
         logging.error(f"Error in plant identification: {str(e)}")

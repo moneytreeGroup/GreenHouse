@@ -6,27 +6,24 @@ export const identifyPlantWithCNN = async (imageFile) => {
     // Prepare image for Flask backend
     const formData = new FormData()
     formData.append('image', imageFile)
-    
     // Connect to Flask backend endpoint
-    const response = await fetch(`${API_BASE_URL}/api/plants/identify-and-care`, {
+    const response = await fetch(`${API_BASE_URL}/api/plants/identify`, {
       method: 'POST',
       body: formData,
     })
-
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     
     const result = await response.json()
-    
     // Return the full plant data structure that PlantInfo expects
-    if (result.success && result.care_data) {
+    if (result.success && result.plant) {
       return {
-        name: result.care_data.name,
-        care: result.care_data.care || {},
-        url: result.care_data.url,
-        confidence: result.identification?.top_match?.confidence,
-        predictions: result.identification?.predictions
+        name: result.plant.name,
+        care: result.plant.care || {},
+        url: result.plant.url,
+        confidence: result.plant.confidence || null, // confidence not in care, so null
+        predictions: [] // not available in this response
       }
     }
     
@@ -36,7 +33,8 @@ export const identifyPlantWithCNN = async (imageFile) => {
     console.error('Backend identification error:', error)
     
     // Fallback to mock identification while debugging
-    return mockPlantIdentification(imageFile)
+    return null
+   // return mockPlantIdentification(imageFile)
   }
 }
 
