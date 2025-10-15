@@ -11,9 +11,31 @@ image_processor = ImageProcessor()
 
 # Load your trained model
 model_path = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "plant_cnn_complete_model.pth"
+    os.path.dirname(os.path.dirname(__file__)), "plant_cnn_complete_model_79.pth"
 )
-plant_model = PlantModel(model_path=model_path)
+plant_model = PlantModel(num_classes=19)
+plant_model.class_names = [
+    "anthurium",
+    "aloe",
+    "bird of paradise",
+    "chinese evergreen",
+    "ctenanthe",
+    "dracaena",
+    "dieffenbachia",
+    "ficus",
+    "ivy",
+    "money tree",
+    "monstera",
+    "peace lily",
+    "poinsettia",
+    "hypoestes",
+    "pothos",
+    "schefflera",
+    "snake plant",
+    "maranta",
+    "zamioculcas zamiifolia",
+]
+plant_model.load_model(model_path)
 
 
 @plant_bp.route("/identify", methods=["POST"])

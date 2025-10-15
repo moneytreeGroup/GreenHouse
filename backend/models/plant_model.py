@@ -1,38 +1,49 @@
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-from torchvision import models
 import numpy as np
 from typing import List, Dict, Tuple, Optional
 import os
 import logging
+import torch.nn.functional as F
 
 
-class PlantModel:
+class PlantModel(nn.Module):
     """
-    PyTorch model wrapper for plant identification
-    This is a placeholder structure - replace with your trained model
+    PyTorch model for plant identification (matches SmallCNN2 checkpoint structure)
     """
 
-    def __init__(self, model_path: str = None, device: str = None):
-        """
-        Initialize plant identification model
-
-        Args:
-            model_path: Path to trained model file
-            device: Device to run inference on ('cpu', 'cuda', 'mps')
-        """
-        self.device = self._get_device(device)
-        self.model = None
+    def __init__(self, num_classes=None):
+        super().__init__()
+        if num_classes is None:
+            num_classes = 19
+        # Convolutional blocks (top-level, not in a submodule)
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.conv2 = nn.Conv2d(64, 96, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(96)
+        self.drop2 = nn.Dropout2d(0.2)
+        self.conv3 = nn.Conv2d(96, 128, kernel_size=3, padding=1)
+        self.bn3 = nn.BatchNorm2d(128)
+        self.conv4 = nn.Conv2d(128, 192, kernel_size=3, padding=1)
+        self.bn4 = nn.BatchNorm2d(192)
+        self.drop4 = nn.Dropout2d(0.2)
+        self.conv5 = nn.Conv2d(192, 256, kernel_size=3, padding=1)
+        self.bn5 = nn.BatchNorm2d(256)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.adaptive_pool = nn.AdaptiveAvgPool2d((6, 6))
+        self.fc1 = nn.Linear(256 * 6 * 6, 512)
+        self.dropout = nn.Dropout(0.6)
+        self.fc2 = nn.Linear(512, num_classes)
         self.class_names = []
-        self.model_path = model_path
         self.is_loaded = False
+        self.confidence_threshold = 0.5
 
         # Define transforms for preprocessing
         self.transforms = transforms.Compose(
             [
                 transforms.ToPILImage(),
-                transforms.Resize((224, 224)),
+                transforms.Resize((150, 150)),
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
@@ -45,10 +56,7 @@ class PlantModel:
         self.plant_classes = [
             "anthurium",
             "aloe",
-            "alocasia",
-            "begonia",
             "bird of paradise",
-            "calathea",
             "chinese evergreen",
             "ctenanthe",
             "dracaena",
@@ -64,76 +72,51 @@ class PlantModel:
             "schefflera",
             "snake plant",
             "maranta",
-            "yucca",
             "zamioculcas zamiifolia",
         ]
 
-        # Try to load model if path provided
-        if model_path and os.path.exists(model_path):
-            self.load_model(model_path)
+    def forward(self, x):
+        x = self.pool(F.relu(self.bn1(self.conv1(x))))
+        x = self.pool(F.relu(self.bn2(self.conv2(x))))
+        x = self.drop2(x)
+        x = self.pool(F.relu(self.bn3(self.conv3(x))))
+        x = self.pool(F.relu(self.bn4(self.conv4(x))))
+        x = self.drop4(x)
+        x = self.pool(F.relu(self.bn5(self.conv5(x))))
+        x = self.adaptive_pool(x)
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = self.fc2(x)
+        return x
 
-    def _get_device(self, device: str = None) -> torch.device:
-        """Determine the best device for inference"""
-        if device:
-            return torch.device(device)
+    def save_model(self, path):
+        torch.save(self.state_dict(), path)
 
-        if torch.cuda.is_available():
-            return torch.device("cuda")
-        elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-            return torch.device("mps")  # Apple Silicon
+    def load_model(self, path, device=None):
+        if device is None:
+            device = "cpu"
+        checkpoint = torch.load(path, map_location=device)
+        if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+            state_dict = checkpoint["model_state_dict"]
         else:
-            return torch.device("cpu")
-
-    def create_model(self, num_classes: int, pretrained: bool = True) -> nn.Module:
-        """
-        Create a model architecture for plant classification
-        You can replace this with your custom architecture
-        """
-        # Using ResNet50 as base - modify as needed
-        model = models.resnet50(pretrained=pretrained)
-
-        # Replace the final layer for your number of plant classes
-        num_features = model.fc.in_features
-        model.fc = nn.Linear(num_features, num_classes)
-
-        return model
-
-    def load_model(self, model_path: str) -> bool:
-        """Load trained model from file"""
-        try:
-            # Load model checkpoint
-            checkpoint = torch.load(model_path, map_location=self.device)
-
-            # Create model architecture
-            num_classes = len(self.plant_classes)
-            self.model = self.create_model(num_classes, pretrained=False)
-
-            # Load state dict
-            if "model_state_dict" in checkpoint:
-                self.model.load_state_dict(checkpoint["model_state_dict"])
-            else:
-                self.model.load_state_dict(checkpoint)
-
-            # Load class names if available
-            if "class_names" in checkpoint:
-                self.class_names = checkpoint["class_names"]
-            else:
-                self.class_names = self.plant_classes
-
-            self.model.to(self.device)
-            self.model.eval()
-            self.is_loaded = True
-
-            logging.info(f"Model loaded successfully from {model_path}")
-            logging.info(f"Device: {self.device}")
-            logging.info(f"Number of classes: {len(self.class_names)}")
-
-            return True
-
-        except Exception as e:
-            logging.error(f"Failed to load model: {str(e)}")
-            self.is_loaded = False
-            return False
+            state_dict = checkpoint
+        # Remove fc2 weights if shape mismatch
+        own_state = self.state_dict()
+        filtered_state_dict = {
+            k: v
+            for k, v in state_dict.items()
+            if k in own_state and own_state[k].shape == v.shape
+        }
+        missing = [k for k in own_state if k not in filtered_state_dict]
+        if missing:
+            logging.warning(
+                f"Skipping loading of layers due to shape mismatch or missing: {missing}"
+            )
+        own_state.update(filtered_state_dict)
+        self.load_state_dict(own_state)
+        self.is_loaded = True
+        self.eval()
 
     def predict(self, image_array: np.ndarray, top_k: int = 5) -> List[Dict]:
         """
@@ -157,11 +140,11 @@ class PlantModel:
 
             # Convert to tensor and add batch dimension
             image_tensor = torch.from_numpy(image_array).permute(2, 0, 1).float()
-            image_tensor = image_tensor.unsqueeze(0).to(self.device)
+            image_tensor = image_tensor.unsqueeze(0)
 
             # Run inference
             with torch.no_grad():
-                outputs = self.model(image_tensor)
+                outputs = self(image_tensor)
                 probabilities = torch.nn.functional.softmax(outputs, dim=1)
 
                 # Get top k predictions
@@ -232,11 +215,11 @@ class PlantModel:
         """Get information about the loaded model"""
         return {
             "is_loaded": self.is_loaded,
-            "model_path": self.model_path,
-            "device": str(self.device),
+            "model_path": "",
+            "device": str(""),
             "num_classes": len(self.class_names),
             "class_names": self.class_names,
-            "model_type": "ResNet50" if self.model else "None",
+            "model_type": "CustomNN" if self.is_loaded else "None",
         }
 
     def validate_prediction(self, prediction: Dict) -> bool:
@@ -272,7 +255,7 @@ class PlantModel:
             tensor = self.transforms(image_array)
             tensor = tensor.unsqueeze(0)  # Add batch dimension
 
-            return tensor.to(self.device)
+            return tensor
 
         except Exception as e:
             logging.error(f"Model preprocessing failed: {str(e)}")
