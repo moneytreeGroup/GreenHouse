@@ -34,10 +34,10 @@ class ImageProcessor:
             logging.warning(f"Image validation failed: {str(e)}")
             return False
 
-    def preprocess_image(self, file) -> np.ndarray:
+    def preprocess_image(self, file) -> Image.Image:
         """
         Preprocess image for model inference
-        Returns: preprocessed image as numpy array
+        Returns: preprocessed PIL Image (resized, padded, RGB, correct orientation)
         """
         try:
             # Open and convert image
@@ -53,14 +53,8 @@ class ImageProcessor:
                 # Resize image while maintaining aspect ratio
                 img = self._resize_with_padding(img, self.target_size)
 
-                # Convert to numpy array and normalize
-                img_array = np.array(img, dtype=np.float32)
-                img_array = img_array / 255.0  # Normalize to [0, 1]
-
-                # Add batch dimension
-                img_array = np.expand_dims(img_array, axis=0)
-
-                return img_array
+                # Return PIL Image (do not convert to numpy)
+                return img
 
         except Exception as e:
             logging.error(f"Image preprocessing failed: {str(e)}")

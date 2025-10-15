@@ -6,32 +6,37 @@ from typing import List, Dict, Tuple, Optional
 import os
 import logging
 import torch.nn.functional as F
+from PIL import Image
 
 
 class PlantModel(nn.Module):
     """
     PyTorch model for plant identification (matches SmallCNN2 checkpoint structure)
+    5-layer CNN for plant species classification
+    - 5 convolutional blocks with batch normalization
+    - Gradual channel progression
+    - Single FC layer with dropout for regularization
     """
 
     def __init__(self, num_classes=None):
         super().__init__()
         if num_classes is None:
-            num_classes = 19
-        # Convolutional blocks (top-level, not in a submodule)
+            num_classes = 29  # Update to 29 classes
+        # 5 Convolutional blocks with gradual progression
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
         self.bn1 = nn.BatchNorm2d(64)
         self.conv2 = nn.Conv2d(64, 96, kernel_size=3, padding=1)
         self.bn2 = nn.BatchNorm2d(96)
-        self.drop2 = nn.Dropout2d(0.2)
         self.conv3 = nn.Conv2d(96, 128, kernel_size=3, padding=1)
         self.bn3 = nn.BatchNorm2d(128)
         self.conv4 = nn.Conv2d(128, 192, kernel_size=3, padding=1)
         self.bn4 = nn.BatchNorm2d(192)
-        self.drop4 = nn.Dropout2d(0.2)
         self.conv5 = nn.Conv2d(192, 256, kernel_size=3, padding=1)
         self.bn5 = nn.BatchNorm2d(256)
+        # Pooling layers
         self.pool = nn.MaxPool2d(2, 2)
         self.adaptive_pool = nn.AdaptiveAvgPool2d((6, 6))
+        # Single FC layer to prevent overfitting
         self.fc1 = nn.Linear(256 * 6 * 6, 512)
         self.dropout = nn.Dropout(0.6)
         self.fc2 = nn.Linear(512, num_classes)
@@ -42,8 +47,7 @@ class PlantModel(nn.Module):
         # Define transforms for preprocessing
         self.transforms = transforms.Compose(
             [
-                transforms.ToPILImage(),
-                transforms.Resize((150, 150)),
+                transforms.Resize((224, 224)),
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
@@ -52,43 +56,60 @@ class PlantModel(nn.Module):
         )
 
         # Plant names that your model can identify
-        # Update this list with your actual trained classes
+        # Correct order as provided
         self.plant_classes = [
-            "anthurium",
-            "aloe",
-            "bird of paradise",
-            "chinese evergreen",
-            "ctenanthe",
-            "dracaena",
-            "dieffenbachia",
-            "ficus",
-            "ivy",
-            "money tree",
-            "monstera",
-            "peace lily",
-            "poinsettia",
-            "hypoestes",
-            "pothos",
-            "schefflera",
-            "snake plant",
-            "maranta",
-            "zamioculcas zamiifolia",
+            "Ivy",
+            "Schefflera",
+            "Pothos",
+            "Peace Lily",
+            "Poinsettia",
+            "Zamioculcas Zamiifolia 'ZZ'",
+            "Ctenanthe",
+            "Hypoestes",
+            "Anthurium",
+            "Aloe",
+            "Dracaena",
+            "Chinese Evergreen",
+            "Maranta",
+            "Monstera",
+            "Dieffenbachia",
+            "Money Tree",
+            "Ficus",
+            "Bird of Paradise",
+            "Snake Plant",
         ]
+        self.class_names = self.plant_classes
 
     def forward(self, x):
+        # Convolutional blocks with BatchNorm and ReLU
         x = self.pool(F.relu(self.bn1(self.conv1(x))))
         x = self.pool(F.relu(self.bn2(self.conv2(x))))
-        x = self.drop2(x)
         x = self.pool(F.relu(self.bn3(self.conv3(x))))
         x = self.pool(F.relu(self.bn4(self.conv4(x))))
-        x = self.drop4(x)
         x = self.pool(F.relu(self.bn5(self.conv5(x))))
+        # Adaptive pooling
         x = self.adaptive_pool(x)
+        # Flatten and fully connected layers
         x = x.view(x.size(0), -1)
         x = F.relu(self.fc1(x))
         x = self.dropout(x)
         x = self.fc2(x)
         return x
+
+    def get_feature_maps(self, x):
+        """Return intermediate feature maps for visualization"""
+        features = []
+        x = self.pool(F.relu(self.bn1(self.conv1(x))))
+        features.append(x)
+        x = self.pool(F.relu(self.bn2(self.conv2(x))))
+        features.append(x)
+        x = self.pool(F.relu(self.bn3(self.conv3(x))))
+        features.append(x)
+        x = self.pool(F.relu(self.bn4(self.conv4(x))))
+        features.append(x)
+        x = self.pool(F.relu(self.bn5(self.conv5(x))))
+        features.append(x)
+        return features
 
     def save_model(self, path):
         torch.save(self.state_dict(), path)
@@ -99,6 +120,10 @@ class PlantModel(nn.Module):
         checkpoint = torch.load(path, map_location=device)
         if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
             state_dict = checkpoint["model_state_dict"]
+            # Extract class names if present
+            if "class_names" in checkpoint:
+                self.class_names = checkpoint["class_names"]
+                self.plant_classes = checkpoint["class_names"]
         else:
             state_dict = checkpoint
         # Remove fc2 weights if shape mismatch
@@ -118,29 +143,27 @@ class PlantModel(nn.Module):
         self.is_loaded = True
         self.eval()
 
-    def predict(self, image_array: np.ndarray, top_k: int = 5) -> List[Dict]:
+    def predict(self, image_input, top_k: int = 5) -> List[Dict]:
         """
-        Predict plant species from preprocessed image
+        Predict plant species from preprocessed image (PIL Image only)
 
         Args:
-            image_array: Preprocessed image as numpy array
+            image_input: Preprocessed image as PIL Image
             top_k: Number of top predictions to return
 
         Returns:
             List of predictions with confidence scores
         """
         if not self.is_loaded:
-            # Return mock predictions for development
-            return self._mock_predictions(top_k)
+            raise RuntimeError("Model is not loaded. Cannot make predictions.")
 
         try:
-            # Convert numpy array to tensor
-            if image_array.ndim == 4:  # Remove batch dimension if present
-                image_array = image_array[0]
+            # Ensure input is a PIL Image
+            if not isinstance(image_input, Image.Image):
+                raise ValueError("Input to predict() must be a PIL Image.")
 
-            # Convert to tensor and add batch dimension
-            image_tensor = torch.from_numpy(image_array).permute(2, 0, 1).float()
-            image_tensor = image_tensor.unsqueeze(0)
+            # Use self.transforms to preprocess (returns torch.Tensor)
+            image_tensor = self.transforms(image_input).unsqueeze(0)  # Add batch dim
 
             # Run inference
             with torch.no_grad():
@@ -169,7 +192,7 @@ class PlantModel(nn.Module):
 
         except Exception as e:
             logging.error(f"Prediction failed: {str(e)}")
-            return self._mock_predictions(top_k)
+            raise  # Propagate the error instead of returning mock predictions
 
     def _mock_predictions(self, top_k: int = 5) -> List[Dict]:
         """
@@ -237,26 +260,17 @@ class PlantModel(nn.Module):
 
         return True
 
-    def preprocess_for_model(self, image_array: np.ndarray) -> torch.Tensor:
+    def preprocess_for_model(self, image_input) -> torch.Tensor:
         """
         Additional preprocessing specifically for the model
-        Override this method if your model needs different preprocessing
+        Accepts PIL Image only
         """
         try:
-            # Convert numpy array to PIL Image for transforms
-            if image_array.ndim == 4:  # Remove batch dimension
-                image_array = image_array[0]
-
-            # Denormalize if needed (assuming input is 0-1 normalized)
-            if image_array.max() <= 1:
-                image_array = (image_array * 255).astype(np.uint8)
-
-            # Apply transforms
-            tensor = self.transforms(image_array)
+            if not isinstance(image_input, Image.Image):
+                raise ValueError("Input to preprocess_for_model() must be a PIL Image.")
+            tensor = self.transforms(image_input)
             tensor = tensor.unsqueeze(0)  # Add batch dimension
-
             return tensor
-
         except Exception as e:
             logging.error(f"Model preprocessing failed: {str(e)}")
             raise ValueError(f"Failed to preprocess image for model: {str(e)}")
