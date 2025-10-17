@@ -11,7 +11,7 @@ image_processor = ImageProcessor()
 
 # Load your trained model
 model_path = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "plant_cnn_complete_model(4).pth"
+    os.path.dirname(os.path.dirname(__file__)), "plant_cnn_complete_model.pth"
 )
 plant_model = PlantModel(num_classes=19)
 plant_model.class_names = [

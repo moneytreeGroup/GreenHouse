@@ -1,9 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-import numpy as np
-from typing import List, Dict, Tuple, Optional
-import os
+from typing import List, Dict
 import logging
 import torch.nn.functional as F
 from PIL import Image
@@ -21,24 +19,32 @@ class PlantModel(nn.Module):
     def __init__(self, num_classes=None):
         super().__init__()
         if num_classes is None:
-            num_classes = 29  # Update to 29 classes
+            num_classes = 19  # Update to 19 classes
         # 5 Convolutional blocks with gradual progression
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
         self.bn1 = nn.BatchNorm2d(64)
+
         self.conv2 = nn.Conv2d(64, 96, kernel_size=3, padding=1)
         self.bn2 = nn.BatchNorm2d(96)
+        self.drop2 = nn.Dropout2d(0.1)  # regularization here
+
         self.conv3 = nn.Conv2d(96, 128, kernel_size=3, padding=1)
         self.bn3 = nn.BatchNorm2d(128)
+
         self.conv4 = nn.Conv2d(128, 192, kernel_size=3, padding=1)
         self.bn4 = nn.BatchNorm2d(192)
+        self.drop4 = nn.Dropout2d(0.1)  # another regularization spot
+
         self.conv5 = nn.Conv2d(192, 256, kernel_size=3, padding=1)
         self.bn5 = nn.BatchNorm2d(256)
+
         # Pooling layers
         self.pool = nn.MaxPool2d(2, 2)
         self.adaptive_pool = nn.AdaptiveAvgPool2d((6, 6))
-        # Single FC layer to prevent overfitting
+
+        # Fully connected layers
         self.fc1 = nn.Linear(256 * 6 * 6, 512)
-        self.dropout = nn.Dropout(0.6)
+        self.dropout = nn.Dropout(0.5)
         self.fc2 = nn.Linear(512, num_classes)
         self.class_names = []
         self.is_loaded = False
@@ -47,7 +53,7 @@ class PlantModel(nn.Module):
         # Define transforms for preprocessing
         self.transforms = transforms.Compose(
             [
-                transforms.Resize((224, 224)),
+                transforms.Resize((150, 150)),
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
@@ -81,19 +87,30 @@ class PlantModel(nn.Module):
         self.class_names = self.plant_classes
 
     def forward(self, x):
-        # Convolutional blocks with BatchNorm and ReLU
+        # Conv Block 1
         x = self.pool(F.relu(self.bn1(self.conv1(x))))
+        # Conv Block 2 + Dropout2d
         x = self.pool(F.relu(self.bn2(self.conv2(x))))
+        x = self.drop2(x)
+
+        # Conv Block 3
         x = self.pool(F.relu(self.bn3(self.conv3(x))))
+        # Conv Block 4 + Dropout2d
         x = self.pool(F.relu(self.bn4(self.conv4(x))))
+        x = self.drop4(x)
+
+        # Conv Block 5
         x = self.pool(F.relu(self.bn5(self.conv5(x))))
+
         # Adaptive pooling
         x = self.adaptive_pool(x)
-        # Flatten and fully connected layers
+
+        # Fully connected layers
         x = x.view(x.size(0), -1)
         x = F.relu(self.fc1(x))
         x = self.dropout(x)
         x = self.fc2(x)
+
         return x
 
     def get_feature_maps(self, x):
@@ -193,46 +210,6 @@ class PlantModel(nn.Module):
         except Exception as e:
             logging.error(f"Prediction failed: {str(e)}")
             raise  # Propagate the error instead of returning mock predictions
-
-    def _mock_predictions(self, top_k: int = 5) -> List[Dict]:
-        """
-        Return mock predictions for development/testing
-        Remove this when you have a trained model
-        """
-        import random
-
-        # Simulate realistic confidence scores
-        mock_predictions = []
-        available_plants = self.plant_classes.copy()
-
-        for i in range(min(top_k, len(available_plants))):
-            plant = random.choice(available_plants)
-            available_plants.remove(plant)
-
-            # Generate decreasing confidence scores
-            if i == 0:
-                confidence = random.uniform(
-                    0.7, 0.95
-                )  # High confidence for top prediction
-            elif i == 1:
-                confidence = random.uniform(0.4, 0.7)  # Medium confidence
-            else:
-                confidence = random.uniform(0.1, 0.4)  # Lower confidence
-
-            mock_predictions.append(
-                {
-                    "name": plant,
-                    "confidence": confidence,
-                    "class_index": self.plant_classes.index(plant),
-                    "mock": True,  # Indicate this is a mock prediction
-                }
-            )
-
-        # Sort by confidence
-        mock_predictions.sort(key=lambda x: x["confidence"], reverse=True)
-
-        logging.info("Returning mock predictions (no model loaded)")
-        return mock_predictions
 
     def get_model_info(self) -> Dict:
         """Get information about the loaded model"""
