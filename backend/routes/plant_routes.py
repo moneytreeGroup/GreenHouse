@@ -68,16 +68,16 @@ def identify_plant():
 
         # Process the image
         processed_image = image_processor.preprocess_image(file)
-        # Get prediction from model
-        predictions = plant_model.predict(processed_image)
+
+        # Get top 5 predictions from model
+        predictions = plant_model.predict(processed_image, top_k=5)
         if not predictions:
             return jsonify({"error": "Could not identify the plant"}), 404
 
-        print("Predictions:", predictions)
+        print("All predictions:", predictions)
 
         # Find the top match (highest confidence)
         top_prediction = max(predictions, key=lambda x: x["confidence"])
-
         plant_name = top_prediction["name"]
 
         # Get care data for the best match
@@ -91,11 +91,33 @@ def identify_plant():
 
         print("Care data found for:", plant_name)
 
-        # Add confidence score to care data
+        # Add confidence score to care data for the top prediction
         care_data_with_confidence = dict(care_data)
         care_data_with_confidence["confidence"] = top_prediction["confidence"]
 
-        return jsonify({"success": True, "plant": care_data_with_confidence}), 200
+        # Get care data for all predictions (for "Try Again" functionality)
+        all_predictions_with_care = []
+        for prediction in predictions:
+            pred_care_data = plant_care_service.get_care_data(prediction["name"])
+            if pred_care_data:
+                enriched_prediction = {
+                    "name": prediction["name"],
+                    "confidence": prediction["confidence"],
+                    "care": pred_care_data.get("care", {}),
+                    "url": pred_care_data.get("url", ""),
+                }
+                all_predictions_with_care.append(enriched_prediction)
+
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "plant": care_data_with_confidence,  # Top prediction for immediate display
+                    "all_predictions": all_predictions_with_care,  # All predictions for "Try Again"
+                }
+            ),
+            200,
+        )
 
     except Exception as e:
         logging.error(f"Error in plant identification: {str(e)}")

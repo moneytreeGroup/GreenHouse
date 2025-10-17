@@ -2,27 +2,55 @@ import { useState } from 'react'
 import ImageUpload from './components/ImageUpload'
 import PlantInfo from './components/PlantInfo'
 import LoadingSpinner from './components/LoadingSpinner'
+import PredictionSelector from './components/PredictionSelector'
 import './App.css'
 
 function App() {
   const [plantData, setPlantData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [showPredictions, setShowPredictions] = useState(false)
+  const [predictions, setPredictions] = useState([])
+  const [selectedFromPredictions, setSelectedFromPredictions] = useState(false)
+
 
   const handlePlantIdentified = (data) => {
     setPlantData(data)
     setError(null)
+    setShowPredictions(false)
   }
 
   const handleError = (errorMessage) => {
     setError(errorMessage)
     setPlantData(null)
+    setShowPredictions(false)
   }
 
   const handleReset = () => {
     setPlantData(null)
     setError(null)
     setLoading(false)
+    setShowPredictions(false)
+    setPredictions([])
+    setSelectedFromPredictions(false)
+  }
+
+  const handleShowPredictions = (predictionsData) => {
+    setPredictions(predictionsData.predictions || [])
+    setShowPredictions(true)
+    setPlantData(null)
+    setSelectedFromPredictions(false)
+  }
+
+  const handleSelectFromPredictions = (selectedPlant) => {
+    setPlantData(selectedPlant)
+    setShowPredictions(false)
+    setSelectedFromPredictions(true)
+  }
+
+  const handleBackToPredictions = () => {
+    setShowPredictions(true)
+    setSelectedFromPredictions(false)
   }
 
   return (
@@ -33,7 +61,7 @@ function App() {
       </header>
 
       <main className="app-main">
-        {!plantData && !loading && (
+        {!plantData && !loading && !showPredictions && (
           <ImageUpload 
             onPlantIdentified={handlePlantIdentified}
             onError={handleError}
@@ -52,10 +80,21 @@ function App() {
           </div>
         )}
 
-        {plantData && (
+        {showPredictions && (
+          <PredictionSelector
+            predictions={predictions}
+            onSelectPlant={handleSelectFromPredictions}
+            onTakeNewPhoto={handleReset}
+          />
+        )}
+
+        {plantData && !showPredictions && (
           <PlantInfo 
             plantData={plantData} 
             onReset={handleReset}
+            onTryAgain={handleShowPredictions}
+            onBackToPredictions={handleBackToPredictions}
+            selectedFromPredictions={selectedFromPredictions}
           />
         )}
       </main>

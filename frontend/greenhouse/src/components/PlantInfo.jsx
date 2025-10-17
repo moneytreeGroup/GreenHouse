@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { getPlantImage } from '../services/plantDataService'
 
-const PlantInfo = ({ plantData, onReset }) => {
+const PlantInfo = ({ plantData, onReset, onTryAgain, onBackToPredictions, selectedFromPredictions }) => {
   const { name, care, url, confidence } = plantData
   const [plantImage, setPlantImage] = useState(null)
   const [imageLoading, setImageLoading] = useState(true)
+
 
   // Fetch plant image when component mounts
   useEffect(() => {
@@ -24,6 +25,18 @@ const PlantInfo = ({ plantData, onReset }) => {
 
     fetchImage()
   }, [name])
+
+  const handleTryAgain = () => {
+  // Use the predictions that are already available from the initial identification
+    if (plantData.predictions && plantData.predictions.length > 0) {
+      onTryAgain({
+        predictions: plantData.predictions,
+        count: plantData.predictions.length
+      })
+    } else {
+      console.error('No alternative predictions available')
+    }
+  }
 
   const careItems = [
     { icon: '☀️', title: 'Light Requirements', content: care.light_requirements },
@@ -64,9 +77,27 @@ const PlantInfo = ({ plantData, onReset }) => {
             🤖 AI Identified
             {confidence && ` (${(confidence * 100).toFixed(1)}% confidence)`}
           </span>
-          <button onClick={onReset} className="new-search-btn">
-            Upload New Photo
-          </button>
+          <div className="action-buttons">
+            {selectedFromPredictions ? (
+              <button 
+                onClick={onBackToPredictions} 
+                className="try-again-btn"
+              >
+                ← Back
+              </button>
+            ) : (
+              <button 
+                onClick={handleTryAgain} 
+                className="try-again-btn"
+                disabled={!plantData.predictions || plantData.predictions.length === 0}
+              >
+                🤔 Try Again
+              </button>
+            )}
+            <button onClick={onReset} className="new-search-btn">
+              📷 Upload New Photo
+            </button>
+          </div>
         </div>
       </div>
 

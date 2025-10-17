@@ -397,6 +397,193 @@ body {
 }
 
 /* Responsive Design */
+/* Prediction Selector Styles */
+.prediction-selector {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.prediction-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.prediction-header h2 {
+  color: #2d5a27;
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+}
+
+.prediction-header p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.predictions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  margin: 30px 0;
+}
+
+.prediction-card {
+  background: #f9f9f9;
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.prediction-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  border-color: #4CAF50;
+}
+
+.prediction-image-container {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 15px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #e8f5e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.prediction-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.prediction-image-loading,
+.prediction-image-fallback {
+  font-size: 2rem;
+  color: #4CAF50;
+}
+
+.prediction-name {
+  color: #2d5a27;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  text-transform: capitalize;
+}
+
+.prediction-confidence {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.confidence-bar {
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #0abde3);
+  transition: width 0.3s ease;
+}
+
+.confidence-text {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 600;
+}
+
+.prediction-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.new-photo-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.new-photo-btn:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+}
+
+.cancel-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn:hover {
+  background: #545b62;
+  transform: translateY(-2px);
+}
+
+.not-in-list-message {
+  text-align: center;
+  margin-top: 25px;
+  padding: 20px;
+  background: #fff3cd;
+  border-radius: 10px;
+  border-left: 4px solid #ffc107;
+}
+
+.not-in-list-message p {
+  color: #856404;
+  margin: 0;
+}
+
+/* Try Again Button Styles */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.try-again-btn {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.try-again-btn:hover:not(:disabled) {
+  background: #ff5252;
+  transform: translateY(-2px);
+}
+
+.try-again-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .app-header h1 {
     font-size: 2rem;
@@ -407,7 +594,8 @@ body {
     text-align: center;
   }
   
-  .header-actions {
+  .header-actions,
+  .action-buttons {
     flex-direction: column;
   }
   
@@ -417,5 +605,13 @@ body {
   
   .upload-area {
     padding: 40px 20px;
+  }
+  
+  .predictions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .prediction-actions {
+    flex-direction: column;
   }
 }

@@ -16,15 +16,17 @@ export const identifyPlantWithCNN = async (imageFile) => {
     }
     
     const result = await response.json()
+    
     // Return the full plant data structure that PlantInfo expects
     if (result.success && result.plant) {
-      return {
+      const plantData = {
         name: result.plant.name,
         care: result.plant.care || {},
         url: result.plant.url,
-        confidence: result.plant.confidence || null, // confidence not in care, so null
-        predictions: [] // not available in this response
+        confidence: result.plant.confidence || null,
+        predictions: result.all_predictions || [] // Now available in the same response!
       }
+      return plantData
     }
     
     throw new Error('No plant data returned from backend')
@@ -34,3 +36,4 @@ export const identifyPlantWithCNN = async (imageFile) => {
     return null
   }
 }
+
