@@ -1,5 +1,29 @@
+import { useState, useEffect } from 'react'
+import { getPlantImage } from '../services/plantDataService'
+
 const PlantInfo = ({ plantData, onReset }) => {
   const { name, care, url, confidence } = plantData
+  const [plantImage, setPlantImage] = useState(null)
+  const [imageLoading, setImageLoading] = useState(true)
+
+  // Fetch plant image when component mounts
+  useEffect(() => {
+    const fetchImage = async () => {
+      if (name) {
+        setImageLoading(true)
+        try {
+          const imageData = await getPlantImage(name)
+          setPlantImage(imageData)
+        } catch (error) {
+          console.error('PlantInfo: Error loading plant image:', error)
+        } finally {
+          setImageLoading(false)
+        }
+      }
+    }
+
+    fetchImage()
+  }, [name])
 
   const careItems = [
     { icon: '☀️', title: 'Light Requirements', content: care.light_requirements },
@@ -13,7 +37,28 @@ const PlantInfo = ({ plantData, onReset }) => {
   return (
     <div className="plant-info">
       <div className="plant-header">
-        <h2>🌿 {name}</h2>
+        <div className="plant-title-section">
+          <h2>🌿 {name}</h2>
+          {plantImage && !imageLoading && (
+            <div className="plant-image-container">
+              <img 
+                src={plantImage.url} 
+                alt={`${name} plant`}
+                className="plant-reference-image"
+                onError={(e) => {
+                  console.error(`Failed to load image: ${plantImage.url}`)
+                  e.target.style.display = 'none'
+                }}
+              />
+            </div>
+          )}
+          {imageLoading && (
+            <div className="image-loading">🔍 Loading plant image...</div>
+          )}
+          {!plantImage && !imageLoading && (
+            <div className="image-loading">📷 No reference image available</div>
+          )}
+        </div>
         <div className="header-actions">
           <span className="ai-badge">
             🤖 AI Identified

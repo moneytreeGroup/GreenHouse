@@ -1,7 +1,7 @@
 // Import your plant care data - keeping as fallback
 import plantCareData from '../data/plant_care_data.json'
 
-const API_BASE_URL = 'http://localhost:8000'
+const API_BASE_URL = 'http://localhost:5000'
 
 export const getPlantCareData = async (plantName) => {
   if (!plantName) return null
@@ -26,6 +26,23 @@ export const getPlantCareData = async (plantName) => {
   }
 }
 
+// Simple function to get plant image from backend
+export const getPlantImage = async (plantName) => {
+  if (!plantName) return null
+  
+  try {
+    // Simple path: just return the image URL directly
+    const imageUrl = `${API_BASE_URL}/api/images/plant/${encodeURIComponent(plantName)}`
+    return {
+      url: imageUrl
+    }
+    
+  } catch (error) {
+    console.error('Error getting plant image URL:', error)
+    return null
+  }
+}
+
 // Fallback function using local data
 const getLocalPlantCareData = (plantName) => {
   if (!plantName) return null
@@ -47,24 +64,4 @@ const getLocalPlantCareData = (plantName) => {
   }
 
   return plant
-}
-
-export const getAllPlantNames = () => {
-  return plantCareData.map(plant => plant.name)
-}
-
-export const getPlantCount = () => {
-  return plantCareData.length
-}
-
-// For CNN model training - get all plant categories
-export const getPlantCategories = () => {
-  return plantCareData.map(plant => ({
-    name: plant.name,
-    hasFullCareData: Boolean(
-      plant.care.light_requirements && 
-      plant.care.watering_needs && 
-      plant.care.soil_preferences
-    )
-  }))
 }

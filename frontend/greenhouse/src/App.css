@@ -125,7 +125,62 @@ body {
   box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-/* Plant Info Styles */
+/* Plant Header Styling */
+.plant-header {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.plant-title-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.plant-title-section h2 {
+  color: #2d3748;
+  margin: 0;
+  flex: 1;
+}
+
+.plant-image-container {
+  flex-shrink: 0;
+}
+
+.plant-reference-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 3px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.image-loading {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  background: #f7fafc;
+  border: 2px dashed #cbd5e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #718096;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Plant Header Styling */
 .plant-info {
   background: white;
   border-radius: 20px;

@@ -3,6 +3,7 @@ from flask_cors import CORS
 import os
 from routes.plant_routes import plant_bp
 from routes.upload_routes import upload_bp
+from routes.image_routes import image_bp
 
 
 def create_app():
@@ -17,11 +18,19 @@ def create_app():
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
     # Enable CORS for React frontend
-    CORS(app, origins=["http://localhost:5173", "http://localhost:3000"])
+    CORS(
+        app,
+        origins=[
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://localhost:5174",
+        ],
+    )
 
     # Register blueprints
     app.register_blueprint(plant_bp, url_prefix="/api/plants")
     app.register_blueprint(upload_bp, url_prefix="/api/upload")
+    app.register_blueprint(image_bp, url_prefix="/api/images")
 
     @app.route("/")
     def health_check():

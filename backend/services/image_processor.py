@@ -1,7 +1,7 @@
 from PIL import Image, ImageOps, ExifTags
 import io
 import numpy as np
-from typing import Tuple, Dict, Any, Optional
+from typing import Tuple, Dict, Any
 import logging
 
 
