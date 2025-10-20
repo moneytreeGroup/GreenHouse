@@ -9,7 +9,6 @@ class PlantCareService:
     def __init__(self, data_file_path: str = None):
         """Initialize with path to plant care data JSON file"""
         if data_file_path is None:
-            # Default to the scraped data file in the project root
             backend_dir = os.path.dirname(os.path.abspath(__file__))
             backend_folder = os.path.dirname(backend_dir)
             data_file_path = os.path.join(backend_folder, "plant_care_data.json")
@@ -35,12 +34,9 @@ class PlantCareService:
         plant_name_lower = plant_name.lower().strip()
         print(os.path.exists(self.data_file_path), self.data_file_path)
 
-        # First try exact match
         for plant in self.plant_data:
             if plant.get("name", "").lower() == plant_name_lower:
                 return plant
-
-        # Try partial match (useful for plant names with variations)
         for plant in self.plant_data:
             stored_name = plant.get("name", "").lower()
             if (

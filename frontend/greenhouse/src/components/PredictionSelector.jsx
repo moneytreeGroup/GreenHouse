@@ -5,7 +5,6 @@ const PredictionSelector = ({ predictions, onSelectPlant, onTakeNewPhoto }) => {
   const [plantImages, setPlantImages] = useState({})
   const [loadingImages, setLoadingImages] = useState(true)
 
-  // Fetch images for all predictions
   useEffect(() => {
     const fetchImages = async () => {
       setLoadingImages(true)

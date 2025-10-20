@@ -9,15 +9,12 @@ from routes.image_routes import image_bp
 def create_app():
     app = Flask(__name__)
 
-    # Configuration
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
-    app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max file size
+    app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
     app.config["UPLOAD_FOLDER"] = "uploads"
 
-    # Create upload directory if it doesn't exist
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-    # Enable CORS for React frontend
     CORS(
         app,
         origins=[
@@ -27,7 +24,6 @@ def create_app():
         ],
     )
 
-    # Register blueprints
     app.register_blueprint(plant_bp, url_prefix="/api/plants")
     app.register_blueprint(upload_bp, url_prefix="/api/upload")
     app.register_blueprint(image_bp, url_prefix="/api/images")
@@ -53,7 +49,5 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    port = int(
-        os.environ.get("PORT", 8000)
-    )  # Default to 8000, override with PORT env var
+    port = int(os.environ.get("PORT", 8000))
     app.run(debug=True, host="0.0.0.0", port=port)

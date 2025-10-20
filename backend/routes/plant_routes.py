@@ -9,9 +9,8 @@ plant_bp = Blueprint("plants", __name__)
 plant_care_service = PlantCareService()
 image_processor = ImageProcessor()
 
-# Load your trained model
 model_path = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "plant_cnn_complete_model(7).pth"
+    os.path.dirname(os.path.dirname(__file__)), "plant_cnn_complete_model.pth"
 )
 plant_model = PlantModel(num_classes=19)
 plant_model.class_names = [
@@ -47,7 +46,6 @@ def identify_plant():
     """
     print("Received identify request")
     try:
-        # Check if image file is present
         if "image" not in request.files:
             return jsonify({"error": "No image file provided"}), 400
 
@@ -55,7 +53,6 @@ def identify_plant():
         if file.filename == "":
             return jsonify({"error": "No file selected"}), 400
 
-        # Validate file type
         if not image_processor.is_valid_image(file):
             return (
                 jsonify(
@@ -66,21 +63,15 @@ def identify_plant():
                 400,
             )
 
-        # Process the image
         processed_image = image_processor.preprocess_image(file)
 
-        # Get top 5 predictions from model
         predictions = plant_model.predict(processed_image, top_k=5)
         if not predictions:
             return jsonify({"error": "Could not identify the plant"}), 404
 
-        print("All predictions:", predictions)
-
-        # Find the top match (highest confidence)
         top_prediction = max(predictions, key=lambda x: x["confidence"])
         plant_name = top_prediction["name"]
 
-        # Get care data for the best match
         care_data = plant_care_service.get_care_data(plant_name)
 
         if not care_data:
@@ -89,13 +80,9 @@ def identify_plant():
                 404,
             )
 
-        print("Care data found for:", plant_name)
-
-        # Add confidence score to care data for the top prediction
         care_data_with_confidence = dict(care_data)
         care_data_with_confidence["confidence"] = top_prediction["confidence"]
 
-        # Get care data for all predictions (for "Try Again" functionality)
         all_predictions_with_care = []
         for prediction in predictions:
             pred_care_data = plant_care_service.get_care_data(prediction["name"])
@@ -112,8 +99,8 @@ def identify_plant():
             jsonify(
                 {
                     "success": True,
-                    "plant": care_data_with_confidence,  # Top prediction for immediate display
-                    "all_predictions": all_predictions_with_care,  # All predictions for "Try Again"
+                    "plant": care_data_with_confidence,
+                    "all_predictions": all_predictions_with_care,
                 }
             ),
             200,
@@ -122,28 +109,6 @@ def identify_plant():
     except Exception as e:
         logging.error(f"Error in plant identification: {str(e)}")
         return jsonify({"error": "Failed to process image"}), 500
-
-
-@plant_bp.route("/care/<plant_name>", methods=["GET"])
-def get_plant_care(plant_name):
-    """
-    Get care instructions for a specific plant
-    Returns: detailed care information
-    """
-    try:
-        care_data = plant_care_service.get_care_data(plant_name)
-
-        if not care_data:
-            return (
-                jsonify({"error": f"Care data not found for plant: {plant_name}"}),
-                404,
-            )
-
-        return jsonify({"success": True, "plant": care_data}), 200
-
-    except Exception as e:
-        logging.error(f"Error getting care data: {str(e)}")
-        return jsonify({"error": "Failed to retrieve care data"}), 500
 
 
 @plant_bp.route("/model/info", methods=["GET"])

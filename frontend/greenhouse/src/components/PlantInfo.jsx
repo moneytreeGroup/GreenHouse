@@ -6,8 +6,6 @@ const PlantInfo = ({ plantData, onReset, onTryAgain, onBackToPredictions, select
   const [plantImage, setPlantImage] = useState(null)
   const [imageLoading, setImageLoading] = useState(true)
 
-
-  // Fetch plant image when component mounts
   useEffect(() => {
     const fetchImage = async () => {
       if (name) {
@@ -27,7 +25,6 @@ const PlantInfo = ({ plantData, onReset, onTryAgain, onBackToPredictions, select
   }, [name])
 
   const handleTryAgain = () => {
-  // Use the predictions that are already available from the initial identification
     if (plantData.predictions && plantData.predictions.length > 0) {
       onTryAgain({
         predictions: plantData.predictions,
@@ -45,7 +42,7 @@ const PlantInfo = ({ plantData, onReset, onTryAgain, onBackToPredictions, select
     { icon: '🌡️', title: 'Temperature & Humidity', content: care.temperature_humidity },
     { icon: '🍃', title: 'Fertilization', content: care.fertilization },
     { icon: '✂️', title: 'Pruning & Maintenance', content: care.pruning_maintenance }
-  ].filter(item => item.content) // Only show items with content
+  ].filter(item => item.content) 
 
   return (
     <div className="plant-info">

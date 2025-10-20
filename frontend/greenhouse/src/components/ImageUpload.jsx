@@ -10,27 +10,22 @@ const ImageUpload = ({ onPlantIdentified, onError, onLoadingChange }) => {
     const file = files[0]
     if (!file) return
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       onError('Please upload an image file')
       return
     }
 
-    // Validate file size (10MB limit for CNN model)
     if (file.size > 10 * 1024 * 1024) {
       onError('File size must be less than 10MB')
       return
     }
 
-    // Create preview
     const reader = new FileReader()
     reader.onload = (e) => setPreview(e.target.result)
     reader.readAsDataURL(file)
 
     try {
       onLoadingChange(true)
-      
-      // Use your CNN model for plant identification and care data
       const plantData = await identifyPlantWithCNN(file)
       
       if (plantData && plantData.name) {
