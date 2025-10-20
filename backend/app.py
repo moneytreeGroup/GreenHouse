@@ -11,9 +11,6 @@ def create_app():
 
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
     app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
-    app.config["UPLOAD_FOLDER"] = "uploads"
-
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
     CORS(
         app,
@@ -31,18 +28,6 @@ def create_app():
     @app.route("/")
     def health_check():
         return {"status": "Plant Recognition API is running!", "version": "1.0.0"}
-
-    @app.errorhandler(413)
-    def too_large(e):
-        return {"error": "File too large. Maximum size is 16MB."}, 413
-
-    @app.errorhandler(404)
-    def not_found(e):
-        return {"error": "Endpoint not found"}, 404
-
-    @app.errorhandler(500)
-    def internal_error(e):
-        return {"error": "Internal server error"}, 500
 
     return app
 

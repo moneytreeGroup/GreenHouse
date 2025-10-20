@@ -251,8 +251,152 @@ body {
 }
 
 .care-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Care Analytics Section - Integrated into PlantInfo */
+.care-analytics-section {
+  margin: 30px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.care-analytics-section .radar-chart-container {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 20px;
+  color: #333;
+}
+
+.care-analytics-section .radar-chart-container h4 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.care-analytics-section .chart-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Tooltip styles for radar chart */
+.custom-tooltip {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 280px;
+  z-index: 1000;
+}
+
+.tooltip-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+  display: block;
+  font-size: 0.9rem;
+}
+
+.tooltip-value {
+  color: #4CAF50;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+  font-size: 0.85rem;
+}
+
+.tooltip-description {
+  color: #666;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.difficulty-assessment {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 20px;
+  color: #333;
+}
+
+.difficulty-assessment h4 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.difficulty-assessment .difficulty-card {
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 8px;
+  padding: 15px;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.difficulty-level {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.difficulty-score-large {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+  border: 2px solid #4CAF50;
+  border-radius: 12px;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+}
+
+.difficulty-explanation {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 0.85rem;
+  color: #666;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.difficulty-explanation p {
+  margin: 0;
+}
+
+/* Responsive design for analytics */
+@media (max-width: 768px) {
+  /* Mobile responsiveness for integrated analytics */
+  .care-analytics-section {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin: 20px 0;
+  }
+  
+  .care-analytics-section .radar-chart-container,
+  .difficulty-assessment {
+    padding: 15px;
+  }
+  
+  .difficulty-level {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .difficulty-text {
+    text-align: center;
+    font-size: 0.8rem;
+  }
 }
 
 .care-header {

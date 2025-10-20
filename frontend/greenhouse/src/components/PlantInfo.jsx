@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
 import { getPlantImage } from '../services/plantDataService'
+import {
+  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
+  ResponsiveContainer, Tooltip
+} from 'recharts'
 
 const PlantInfo = ({ plantData, onReset, onTryAgain, onBackToPredictions, selectedFromPredictions }) => {
   const { name, care, url, confidence } = plantData
@@ -24,6 +28,79 @@ const PlantInfo = ({ plantData, onReset, onTryAgain, onBackToPredictions, select
     fetchImage()
   }, [name])
 
+  const getCareLevel = (careText, careType) => {
+    if (!careText) return 0
+    
+    const text = careText.toLowerCase()
+    let result = 3 
+    
+    switch (careType) {
+      case 'light':
+        if (text.includes('full sun') || text.includes('direct sunlight') || text.includes('full sunlight')) result = 5
+        else if (text.includes('bright') && text.includes('indirect')) result = 3
+        else if (text.includes('low light') || text.includes('tolerate low')) result = 1
+        else if (text.includes('bright')) result = 4
+        else if (text.includes('partial shade') || text.includes('shade')) result = 2
+        break
+        
+      case 'water':
+        if (text.includes('consistently moist') || text.includes('evenly moist')) result = 4
+        else if (text.includes('dry out completely')) result = 1
+        else if (text.includes('dry out between')) result = 2
+        else if (text.includes('sparingly') || text.includes('drought-tolerant')) result = 1
+        else if (text.includes('regularly') || text.includes('when top inch')) result = 3
+        break
+        
+      case 'soil':
+        if (text.includes('well-draining') && text.includes('rich in organic')) result = 3
+        else if (text.includes('succulent') || text.includes('cactus')) result = 2
+        else if (text.includes('well-draining')) result = 2
+        else if (text.includes('specific') || text.includes('special mix')) result = 4
+        break
+        
+      case 'humidity':
+        if (text.includes('high humidity') || text.includes('above 60%') || text.includes('humid environments')) result = 5
+        else if (text.includes('moderate humidity') || text.includes('above 50%')) result = 3
+        else if (text.includes('low humidity') || text.includes('average household')) result = 1
+        else if (text.includes('misting') || text.includes('humidifier')) result = 4
+        break
+        
+      case 'fertilizer':
+        if (text.includes('every 2-4 weeks') || text.includes('every 4-6 weeks')) result = 3
+        else if (text.includes('every 2-3 months') || text.includes('sparingly')) result = 1
+        else if (text.includes('monthly') || text.includes('once a month')) result = 4
+        else if (text.includes('balanced') && text.includes('growing season')) result = 3
+        break
+        
+      case 'maintenance':
+        if (text.includes('regularly prune') || text.includes('pinch back')) result = 4
+        else if (text.includes('remove yellow') || text.includes('trim')) result = 2
+        else if (text.includes('repot every 1-2 years')) result = 3
+        else if (text.includes('repot every 2-3 years')) result = 2
+        else if (text.includes('minimal') || text.includes('occasional')) result = 1
+        break
+    }
+    
+    return result
+  }
+
+  const calculateDifficulty = () => {
+    const lightLevel = getCareLevel(care.light_requirements, 'light')
+    const waterLevel = getCareLevel(care.watering_needs, 'water')
+    const soilLevel = getCareLevel(care.soil_preferences, 'soil')
+    const humidityLevel = getCareLevel(care.temperature_humidity, 'humidity')
+    const fertilizerLevel = getCareLevel(care.fertilization, 'fertilizer')
+    const maintenanceLevel = getCareLevel(care.pruning_maintenance, 'maintenance')
+    
+    const avgDifficulty = (lightLevel + waterLevel + soilLevel + humidityLevel + fertilizerLevel + maintenanceLevel) / 6
+    
+    if (avgDifficulty <= 2) return 1
+    if (avgDifficulty <= 2.5) return 2
+    if (avgDifficulty <= 3.5) return 3
+    if (avgDifficulty <= 4) return 4
+    return 5
+  }
+
   const handleTryAgain = () => {
     if (plantData.predictions && plantData.predictions.length > 0) {
       onTryAgain({
@@ -35,6 +112,61 @@ const PlantInfo = ({ plantData, onReset, onTryAgain, onBackToPredictions, select
     }
   }
 
+  const radarData = [
+    {
+      aspect: 'Light Requirements',
+      value: getCareLevel(care.light_requirements, 'light'),
+      fullMark: 5,
+      description: care.light_requirements || 'Not specified'
+    },
+    {
+      aspect: 'Watering Needs',
+      value: getCareLevel(care.watering_needs, 'water'),
+      fullMark: 5,
+      description: care.watering_needs || 'Not specified'
+    },
+    {
+      aspect: 'Soil Preferences',
+      value: getCareLevel(care.soil_preferences, 'soil'),
+      fullMark: 5,
+      description: care.soil_preferences || 'Not specified'
+    },
+    {
+      aspect: 'Temperature & Humidity',
+      value: getCareLevel(care.temperature_humidity, 'humidity'),
+      fullMark: 5,
+      description: care.temperature_humidity || 'Not specified'
+    },
+    {
+      aspect: 'Fertilization',
+      value: getCareLevel(care.fertilization, 'fertilizer'),
+      fullMark: 5,
+      description: care.fertilization || 'Not specified'
+    },
+    {
+      aspect: 'Pruning & Maintenance',
+      value: getCareLevel(care.pruning_maintenance, 'maintenance'),
+      fullMark: 5,
+      description: care.pruning_maintenance || 'Not specified'
+    }
+  ]
+
+  const difficultyLevel = calculateDifficulty()
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload
+      return (
+        <div className="custom-tooltip">
+          <p className="tooltip-label">{data.aspect}</p>
+          <p className="tooltip-value">Level: {data.value}/5</p>
+          <p className="tooltip-description">{data.description}</p>
+        </div>
+      )
+    }
+    return null
+  }
+
   const careItems = [
     { icon: '☀️', title: 'Light Requirements', content: care.light_requirements },
     { icon: '💧', title: 'Watering Needs', content: care.watering_needs },
@@ -42,7 +174,7 @@ const PlantInfo = ({ plantData, onReset, onTryAgain, onBackToPredictions, select
     { icon: '🌡️', title: 'Temperature & Humidity', content: care.temperature_humidity },
     { icon: '🍃', title: 'Fertilization', content: care.fertilization },
     { icon: '✂️', title: 'Pruning & Maintenance', content: care.pruning_maintenance }
-  ].filter(item => item.content) 
+  ].filter(item => item.content)
 
   return (
     <div className="plant-info">
@@ -115,6 +247,44 @@ const PlantInfo = ({ plantData, onReset, onTryAgain, onBackToPredictions, select
           <p>🌱 Plant identified but detailed care instructions are being added soon!</p>
         </div>
       )}
+
+      <div className="care-analytics-section">
+        <div className="radar-chart-container">
+          <h4>Care Requirements Profile</h4>
+          <div className="chart-wrapper">
+            <ResponsiveContainer width="100%" height={350}>
+              <RadarChart data={radarData} margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="aspect" tick={{ fontSize: 11 }} />
+                <PolarRadiusAxis 
+                  angle={0} 
+                  domain={[0, 5]} 
+                  tick={{ fontSize: 9 }}
+                  tickCount={6}
+                />
+                <Radar
+                  name={name}
+                  dataKey="value"
+                  stroke="#4CAF50"
+                  fill="#4CAF50"
+                  fillOpacity={0.3}
+                  strokeWidth={2}
+                />
+                <Tooltip content={<CustomTooltip />} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="difficulty-assessment">
+          <h4>Care Difficulty</h4>
+          <div className="difficulty-card">
+            <div className="difficulty-level">
+              <span className="difficulty-score-large">{difficultyLevel}/5</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {url && (
         <div className="additional-info">
