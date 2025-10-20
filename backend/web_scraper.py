@@ -386,20 +386,34 @@ try:
         try:
             # Visit individual plant page
             driver.get(plant_link["url"])
-            time.sleep(3)  # Wait for page to load
+
+            # Scroll to load lazy images
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(2)
+
+            plant_soup = BeautifulSoup(driver.page_source, "html.parser")
+            main = plant_soup.select_one("main, article, .post-content")
+            if main:
+                plant_images = extract_plant_images(
+                    main, plant_link["name"], plant_link["url"]
+                )
+            else:
+                plant_images = extract_plant_images(
+                    plant_soup, plant_link["name"], plant_link["url"]
+                )
 
             # Parse the plant page
-            plant_soup = BeautifulSoup(driver.page_source, "html.parser")
+            # plant_soup = BeautifulSoup(driver.page_source, "html.parser")
 
             # Extract care data
             care_data = extract_care_data(plant_soup, plant_link["name"])
             care_data["url"] = plant_link["url"]
 
-            # Extract plant images
-            print(f"  Extracting images for {plant_link['name']}...")
-            plant_images = extract_plant_images(
-                plant_soup, plant_link["name"], plant_link["url"]
-            )
+            # # Extract plant images
+            # print(f"  Extracting images for {plant_link['name']}...")
+            # plant_images = extract_plant_images(
+            #     plant_soup, plant_link["name"], plant_link["url"]
+            # )
             care_data["images"] = plant_images
             print(f"  Found {len(plant_images)} images")
 
@@ -415,10 +429,10 @@ try:
     print("\nProcessing images...")
 
     # Option 1: Just keep URLs (faster, smaller JSON)
-    plant_data = save_images_locally(plant_data, download_images=False)
+    # plant_data = save_images_locally(plant_data, download_images=False)
 
     # Option 2: Download images locally (uncomment to enable)
-    # plant_data = save_images_locally(plant_data, download_images=True)
+    plant_data = save_images_locally(plant_data, download_images=True)
 
     # Save to JSON file
     with open("plant_care_data.json", "w", encoding="utf-8") as f:
