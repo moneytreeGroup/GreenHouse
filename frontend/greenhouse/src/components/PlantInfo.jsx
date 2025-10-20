@@ -45,39 +45,42 @@ const PlantInfo = ({ plantData, onReset, onTryAgain, onBackToPredictions, select
         
       case 'water':
         if (text.includes('consistently moist') || text.includes('evenly moist')) result = 4
-        else if (text.includes('dry out completely')) result = 1
-        else if (text.includes('dry out between')) result = 2
-        else if (text.includes('sparingly') || text.includes('drought-tolerant')) result = 1
-        else if (text.includes('regularly') || text.includes('when top inch')) result = 3
+        else if (text.includes('dry out completely') || text.includes('drought-tolerant') || text.includes('sparingly')) result = 1
+        else if (text.includes('dry out between') || text.includes('top inch')) result = 2
+        else if (text.includes('regularly') && !text.includes('moist')) result = 3
+        else if (text.includes('sensitive to drought') || text.includes('wilt quickly')) result = 5
         break
         
       case 'soil':
-        if (text.includes('well-draining') && text.includes('rich in organic')) result = 3
-        else if (text.includes('succulent') || text.includes('cactus')) result = 2
-        else if (text.includes('well-draining')) result = 2
-        else if (text.includes('specific') || text.includes('special mix')) result = 4
+        if (text.includes('succulent') || text.includes('cactus') || text.includes('specifically designed for succulents')) result = 1
+        else if (text.includes('standard potting soil') || (text.includes('well-draining') && !text.includes('rich') && !text.includes('peat') && !text.includes('bark'))) result = 2
+        else if (text.includes('well-draining') && (text.includes('rich in organic') || text.includes('peat') || text.includes('pine bark'))) result = 3
+        else if (text.includes('multiple components') || (text.includes('mix of') && text.includes('and') && text.includes('and'))) result = 4
+        else if (text.includes('complex') || text.includes('rare components') || text.includes('special requirements')) result = 5
         break
         
       case 'humidity':
-        if (text.includes('high humidity') || text.includes('above 60%') || text.includes('humid environments')) result = 5
-        else if (text.includes('moderate humidity') || text.includes('above 50%')) result = 3
-        else if (text.includes('low humidity') || text.includes('average household')) result = 1
-        else if (text.includes('misting') || text.includes('humidifier')) result = 4
+        if (text.includes('low humidity') || text.includes('average household') || text.includes('sufficient')) result = 1
+        else if (text.includes('can tolerate') && text.includes('humidity')) result = 2
+        else if (text.includes('moderate humidity') || text.includes('above 50%') || text.includes('above 40%')) result = 3
+        else if (text.includes('misting') || text.includes('humidifier') || text.includes('humidity tray')) result = 4
+        else if (text.includes('high humidity') || text.includes('above 60%') || text.includes('humid environments')) result = 5
         break
         
       case 'fertilizer':
-        if (text.includes('every 2-4 weeks') || text.includes('every 4-6 weeks')) result = 3
-        else if (text.includes('every 2-3 months') || text.includes('sparingly')) result = 1
-        else if (text.includes('monthly') || text.includes('once a month')) result = 4
-        else if (text.includes('balanced') && text.includes('growing season')) result = 3
+        if (text.includes('sparingly') || text.includes('once in the spring') || text.includes('every 2-3 months')) result = 1
+        else if (text.includes('every 4-6 weeks') || text.includes('monthly')) result = 2
+        else if (text.includes('every 2-4 weeks') || text.includes('balanced') && text.includes('growing season')) result = 3
+        else if (text.includes('weekly') || text.includes('frequent')) result = 4
+        else if (text.includes('daily') || text.includes('constant feeding')) result = 5
         break
         
       case 'maintenance':
-        if (text.includes('regularly prune') || text.includes('pinch back')) result = 4
-        else if (text.includes('remove yellow') || text.includes('trim')) result = 2
-        else if (text.includes('repot every 1-2 years')) result = 3
-        else if (text.includes('repot every 2-3 years')) result = 2
-        else if (text.includes('minimal') || text.includes('occasional')) result = 1
+        if (text.includes('minimal') || text.includes('occasional') || text.includes('clean the leaves occasionally')) result = 1
+        else if (text.includes('remove yellow') || text.includes('repot every 2-3 years')) result = 2
+        else if (text.includes('trim') || text.includes('repot every 1-2 years')) result = 3
+        else if (text.includes('regularly prune') || text.includes('pinch back') || text.includes('control growth')) result = 4
+        else if (text.includes('daily care') || text.includes('constant attention')) result = 5
         break
     }
     
@@ -94,10 +97,10 @@ const PlantInfo = ({ plantData, onReset, onTryAgain, onBackToPredictions, select
     
     const avgDifficulty = (lightLevel + waterLevel + soilLevel + humidityLevel + fertilizerLevel + maintenanceLevel) / 6
     
-    if (avgDifficulty <= 2) return 1
+    if (avgDifficulty <= 1.8) return 1
     if (avgDifficulty <= 2.5) return 2
-    if (avgDifficulty <= 3.5) return 3
-    if (avgDifficulty <= 4) return 4
+    if (avgDifficulty <= 3.3) return 3
+    if (avgDifficulty <= 4.2) return 4
     return 5
   }
 
@@ -250,7 +253,7 @@ const PlantInfo = ({ plantData, onReset, onTryAgain, onBackToPredictions, select
 
       <div className="care-analytics-section">
         <div className="radar-chart-container">
-          <h4>Care Requirements Profile</h4>
+          <h4>Plant Care Requirements Analysis</h4>
           <div className="chart-wrapper">
             <ResponsiveContainer width="100%" height={350}>
               <RadarChart data={radarData} margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
@@ -282,6 +285,9 @@ const PlantInfo = ({ plantData, onReset, onTryAgain, onBackToPredictions, select
             <div className="difficulty-level">
               <span className="difficulty-score-large">{difficultyLevel}/5</span>
             </div>
+            <p className="difficulty-explanation">
+              Computed as the mean of six care parameter assessments (1-5 scale).
+            </p>
           </div>
         </div>
       </div>
