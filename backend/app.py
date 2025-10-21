@@ -12,13 +12,13 @@ def create_app():
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
     app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
+    allowed_origins = os.environ.get(
+        "CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
+    ).split(",")
+
     CORS(
         app,
-        origins=[
-            "http://localhost:5173",
-            "http://localhost:3000",
-            "http://localhost:5174",
-        ],
+        origins=allowed_origins,
     )
 
     app.register_blueprint(plant_bp, url_prefix="/api/plants")
