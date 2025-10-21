@@ -26,14 +26,12 @@ class PlantModel(nn.Module):
 
         self.conv2 = nn.Conv2d(64, 96, kernel_size=3, padding=1)
         self.bn2 = nn.BatchNorm2d(96)
-        self.drop2 = nn.Dropout2d(0.1)
 
         self.conv3 = nn.Conv2d(96, 128, kernel_size=3, padding=1)
         self.bn3 = nn.BatchNorm2d(128)
 
         self.conv4 = nn.Conv2d(128, 192, kernel_size=3, padding=1)
         self.bn4 = nn.BatchNorm2d(192)
-        self.drop4 = nn.Dropout2d(0.1)
 
         self.conv5 = nn.Conv2d(192, 256, kernel_size=3, padding=1)
         self.bn5 = nn.BatchNorm2d(256)
@@ -42,8 +40,9 @@ class PlantModel(nn.Module):
         self.adaptive_pool = nn.AdaptiveAvgPool2d((6, 6))
 
         self.fc1 = nn.Linear(256 * 6 * 6, 512)
-        self.dropout = nn.Dropout(0.5)
+        self.dropout = nn.Dropout(0.7)
         self.fc2 = nn.Linear(512, num_classes)
+
         self.class_names = []
         self.is_loaded = False
         self.confidence_threshold = 0.5
@@ -84,12 +83,8 @@ class PlantModel(nn.Module):
     def forward(self, x):
         x = self.pool(F.relu(self.bn1(self.conv1(x))))
         x = self.pool(F.relu(self.bn2(self.conv2(x))))
-        x = self.drop2(x)
-
         x = self.pool(F.relu(self.bn3(self.conv3(x))))
         x = self.pool(F.relu(self.bn4(self.conv4(x))))
-        x = self.drop4(x)
-
         x = self.pool(F.relu(self.bn5(self.conv5(x))))
 
         x = self.adaptive_pool(x)
