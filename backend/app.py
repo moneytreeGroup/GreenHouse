@@ -19,6 +19,9 @@ def create_app():
     CORS(
         app,
         origins=allowed_origins,
+        supports_credentials=True,
+        allow_headers=["Content-Type", "Authorization"],
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     )
 
     app.register_blueprint(plant_bp, url_prefix="/api/plants")
