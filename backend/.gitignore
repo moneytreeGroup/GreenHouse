@@ -95,16 +95,7 @@ instance/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-house_plant_species/
-geckodriver.log
 
-# Plant images - don't push to git (large files)
-plant_images/
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.webp
 
-# Downloaded plant data with base64 images
-plant_care_data.json
+
+
