@@ -22,12 +22,10 @@ def predict_with_hf_api(image_file):
 
         print(f"Calling Gradio Space: {HF_MODEL_URL}")
 
-        # Save the uploaded file to a temp location
         temp_path = "/tmp/uploaded_image.jpg"
         image_file.seek(0)
         image_file.save(temp_path)
 
-        # Use gradio_client to call the Space
         client = Client(HF_MODEL_URL)
         result = client.predict(image=handle_file(temp_path), api_name="/predict")
         print(f"Gradio Space result: {result}")
