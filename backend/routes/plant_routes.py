@@ -4,18 +4,6 @@ from services.image_processor import ImageProcessor
 from models.plant_model import PlantModel
 import logging
 import os
-import torch
-import gc
-
-torch.set_num_threads(1)
-
-
-def optimize_memory():
-    """Optimize memory usage"""
-    gc.collect()
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-
 
 plant_bp = Blueprint("plants", __name__)
 plant_care_service = PlantCareService()
@@ -46,6 +34,7 @@ plant_model.class_names = [
     "maranta",
     "zamioculcas zamiifolia",
 ]
+
 plant_model.load_model(model_path)
 
 
@@ -56,7 +45,6 @@ def identify_plant():
     Expected: multipart/form-data with 'image' file
     Returns: care data for the best match
     """
-    optimize_memory()
     print("Received identify request")
     try:
         if "image" not in request.files:
