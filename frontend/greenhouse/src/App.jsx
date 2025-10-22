@@ -62,11 +62,16 @@ function App() {
 
       <main className="app-main">
         {!plantData && !loading && !showPredictions && (
+         <>
           <ImageUpload 
-            onPlantIdentified={handlePlantIdentified}
-            onError={handleError}
-            onLoadingChange={setLoading}
-          />
+              onPlantIdentified={handlePlantIdentified}
+              onError={handleError}
+              onLoadingChange={setLoading}
+            />
+            <p className="supported-plants">
+              <strong>Supports 19 plant species:</strong> Anthurium, Aloe, Bird of Paradise, Chinese Evergreen, Ctenanthe, Dracaena, Dieffenbachia, Ficus, Ivy, Money Tree, Monstera, Peace Lily, Poinsettia, Hypoestes, Pothos, Schefflera, Snake Plant, Maranta, and Zamioculcas Zamiifolia.
+            </p>
+          </>
         )}
 
         {loading && <LoadingSpinner />}

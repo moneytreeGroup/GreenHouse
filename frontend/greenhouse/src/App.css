@@ -816,3 +816,15 @@ body {
     flex-direction: column;
   }
 }
+
+.supported-plants {
+  color: #5a8f5a;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 1.5rem 0;
+  text-align: center;
+  background: #f0f9f0;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #d4e6d4;
+  line-height: 1.4;
+}
