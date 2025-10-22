@@ -4,6 +4,7 @@ from services.image_processor import ImageProcessor
 import logging
 import os
 import requests
+from gradio_client import Client, handle_file
 
 
 plant_bp = Blueprint("plants", __name__)
@@ -14,49 +15,23 @@ HF_MODEL_URL = os.environ.get("HF_MODEL_URL")
 
 
 def predict_with_hf_api(image_file):
-    """Send image to Hugging Face Gradio API for prediction"""
+    """Send image to Hugging Face Gradio Space using gradio_client"""
     try:
         if not HF_MODEL_URL:
             raise Exception("HF_MODEL_URL not configured")
 
-        print(f"Calling API URL: {HF_MODEL_URL}")
+        print(f"Calling Gradio Space: {HF_MODEL_URL}")
 
-        # Reset file pointer
+        # Save the uploaded file to a temp location
+        temp_path = "/tmp/uploaded_image.jpg"
         image_file.seek(0)
+        image_file.save(temp_path)
 
-        # For Gradio API, send the file directly without converting to PIL
-        files = {
-            "data": (
-                image_file.filename or "image.jpg",
-                image_file.stream,
-                image_file.content_type or "image/jpeg",
-            )
-        }
-
-        response = requests.post(HF_MODEL_URL, files=files, timeout=30)
-
-        print(f"Response status: {response.status_code}")
-        print(f"Response content: {response.text[:300]}")  # Debug log
-
-        if response.status_code == 200:
-            result = response.json()
-            print(f"Parsed JSON: {result}")
-
-            if result.get("success"):
-                return result.get("predictions", [])
-            else:
-                # Sometimes Gradio returns results in different format
-                if isinstance(result, list) and len(result) > 0:
-                    # If result is directly the predictions array
-                    return result
-                elif isinstance(result, dict) and "predictions" in result:
-                    return result["predictions"]
-                else:
-                    logging.error(f"Unexpected response format: {result}")
-        else:
-            logging.error(f"HF API error: {response.status_code} - {response.text}")
-
-        return []
+        # Use gradio_client to call the Space
+        client = Client(HF_MODEL_URL)
+        result = client.predict(image=handle_file(temp_path), api_name="/predict")
+        print(f"Gradio Space result: {result}")
+        return result
     except Exception as e:
         logging.error(f"HF API error: {e}")
         return []
@@ -89,8 +64,11 @@ def identify_plant():
             )
 
         if HF_MODEL_URL:
-            print("Using Hugging Face API for prediction")
-            predictions = predict_with_hf_api(file)
+            result = predict_with_hf_api(file)
+            if isinstance(result, dict) and "predictions" in result:
+                predictions = result["predictions"]
+            else:
+                predictions = result
 
         if not predictions:
             return jsonify({"error": "Could not identify the plant"}), 404
