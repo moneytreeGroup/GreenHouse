@@ -1,41 +1,65 @@
 from flask import Blueprint, request, jsonify
 from services.plant_care_service import PlantCareService
 from services.image_processor import ImageProcessor
-from models.plant_model import PlantModel
 import logging
 import os
+import requests
+
 
 plant_bp = Blueprint("plants", __name__)
 plant_care_service = PlantCareService()
 image_processor = ImageProcessor()
 
-model_path = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "plant_cnn_complete_model.pth"
-)
-plant_model = PlantModel(num_classes=19)
-plant_model.class_names = [
-    "anthurium",
-    "aloe",
-    "bird of paradise",
-    "chinese evergreen",
-    "ctenanthe",
-    "dracaena",
-    "dieffenbachia",
-    "ficus",
-    "ivy",
-    "money tree",
-    "monstera",
-    "peace lily",
-    "poinsettia",
-    "hypoestes",
-    "pothos",
-    "schefflera",
-    "snake plant",
-    "maranta",
-    "zamioculcas zamiifolia",
-]
+HF_MODEL_URL = os.environ.get("HF_MODEL_URL")
 
-plant_model.load_model(model_path)
+
+def predict_with_hf_api(image_file):
+    """Send image to Hugging Face Gradio API for prediction"""
+    try:
+        if not HF_MODEL_URL:
+            raise Exception("HF_MODEL_URL not configured")
+
+        print(f"Calling API URL: {HF_MODEL_URL}")
+
+        # Reset file pointer
+        image_file.seek(0)
+
+        # For Gradio API, send the file directly without converting to PIL
+        files = {
+            "data": (
+                image_file.filename or "image.jpg",
+                image_file.stream,
+                image_file.content_type or "image/jpeg",
+            )
+        }
+
+        response = requests.post(HF_MODEL_URL, files=files, timeout=30)
+
+        print(f"Response status: {response.status_code}")
+        print(f"Response content: {response.text[:300]}")  # Debug log
+
+        if response.status_code == 200:
+            result = response.json()
+            print(f"Parsed JSON: {result}")
+
+            if result.get("success"):
+                return result.get("predictions", [])
+            else:
+                # Sometimes Gradio returns results in different format
+                if isinstance(result, list) and len(result) > 0:
+                    # If result is directly the predictions array
+                    return result
+                elif isinstance(result, dict) and "predictions" in result:
+                    return result["predictions"]
+                else:
+                    logging.error(f"Unexpected response format: {result}")
+        else:
+            logging.error(f"HF API error: {response.status_code} - {response.text}")
+
+        return []
+    except Exception as e:
+        logging.error(f"HF API error: {e}")
+        return []
 
 
 @plant_bp.route("/identify", methods=["POST"])
@@ -64,9 +88,10 @@ def identify_plant():
                 400,
             )
 
-        processed_image = image_processor.preprocess_image(file)
+        if HF_MODEL_URL:
+            print("Using Hugging Face API for prediction")
+            predictions = predict_with_hf_api(file)
 
-        predictions = plant_model.predict(processed_image, top_k=5)
         if not predictions:
             return jsonify({"error": "Could not identify the plant"}), 404
 
@@ -115,10 +140,39 @@ def identify_plant():
 @plant_bp.route("/model/info", methods=["GET"])
 def get_model_info():
     """
-    Get information about the loaded model (for debugging)
+    Get information about the Hugging Face Gradio Space
     """
     try:
-        model_info = plant_model.get_model_info()
+        model_info = {
+            "service": "Hugging Face Gradio Space",
+            "hf_url_configured": bool(HF_MODEL_URL),
+            "model_url": HF_MODEL_URL if HF_MODEL_URL else "Not configured",
+        }
+
+        if HF_MODEL_URL:
+            try:
+                space_url = HF_MODEL_URL.replace("/api/predict", "")
+                response = requests.get(space_url, timeout=10)
+
+                model_info["hf_status"] = (
+                    "connected" if response.status_code == 200 else "disconnected"
+                )
+                model_info["response_code"] = response.status_code
+
+                if response.status_code == 200:
+                    model_info["space_status"] = "running"
+                else:
+                    model_info["space_status"] = "not_running"
+
+            except requests.exceptions.Timeout:
+                model_info["hf_status"] = "timeout"
+                model_info["space_status"] = "timeout"
+            except Exception as e:
+                model_info["hf_status"] = "error"
+                model_info["error"] = str(e)
+        else:
+            model_info["hf_status"] = "not_configured"
+
         return jsonify({"success": True, "model_info": model_info}), 200
     except Exception as e:
         logging.error(f"Error getting model info: {str(e)}")

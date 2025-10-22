@@ -4,6 +4,9 @@ import os
 from routes.plant_routes import plant_bp
 from routes.upload_routes import upload_bp
 from routes.image_routes import image_bp
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def create_app():
@@ -38,4 +41,4 @@ def create_app():
 if __name__ == "__main__":
     app = create_app()
     port = int(os.environ.get("PORT", 8000))
-    app.run(debug=False, host="0.0.0.0", port=port)
+    app.run(debug=True, host="0.0.0.0", port=port)
