@@ -2,6 +2,10 @@
 
 Mini-project for the University of Helsinki course Introduction to Data Science 2025.
 It is a full-stack web application that uses machine learning to identify plant species from images and provides detailed care instructions to help you keep your plants healthy and thriving.
+Backend: https://greenhouse-backend-ju79.onrender.com
+Frontend: https://greenhouse-frontend.onrender.com
+CNN Model: https://lauras1-plant-classifier.hf.space/
+Manual: Go to https://greenhouse-backend-ju79.onrender.com/api/plants/model/info to view model information. If the model is not connected, go to the CNN model page and start the model.
 
 ## 📋 Overview
 
