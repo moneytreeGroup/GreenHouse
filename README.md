@@ -29,8 +29,8 @@ greenhouse_project/
 │   ├── routes/             # API route handlers
 │   ├── services/           # Business logic and services
 │   ├── plant_images/       # Training data (19 plant species)
-│   ├── plant_care_data.json # Plant care information database
-|   └── plant_cnn_complete_model.pth # CNN model used to classify images 
+│   └── plant_care_data.json # Plant care information database
+| 
 └── frontend/
     └── greenhouse/         # React application
         ├── src/
@@ -159,7 +159,7 @@ The training data used in this project is subject to CC BY-NC-SA 4.0, and theref
 
 ## 👥 Authors
 
-Created by the MoneyTree Group
+Created by the MoneyTree Group: Niko, Laura and Elina.
 
 ---
 
